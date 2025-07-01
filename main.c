@@ -3,7 +3,7 @@
 int main() {
     Zona zonas[MAX_ZONAS];
     int numZonas = cargarZonas(zonas);
-    
+
     if (numZonas == 0) {
         printf("No se encontraron datos iniciales. Iniciando con datos vacíos.\n");
     }
