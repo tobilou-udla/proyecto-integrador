@@ -1,23 +1,39 @@
-#include "gestion_contaminacion.h"
+#include <stdio.h>
+#include <string.h>
 
-// Función para inicializar las zonas y crear el archivo .dat
-void inicializarZonas() {
-    Zona zonas[MAX_ZONAS] = {
-        {"Zona Centro", {}, 0},
-        {"Zona Norte", {}, 0},
-        {"Zona Sur", {}, 0},
-        {"Zona Este", {}, 0},
-        {"Zona Oeste", {}, 0}
+typedef struct {
+    char nombre[50];
+    float contaminantes[30]; // Últimos 30 días de contaminantes generales (promedio diario)
+    float contaminantesEspecificos[4][30]; // Históricos específicos para CO2, SO2, NO2, PM2.5
+    float actual[4]; // Niveles actuales de CO2, SO2, NO2, PM2.5
+    float promedioHistorico; // Promedio histórico general
+    float prediccion; // Predicción para las próximas 24 horas
+} Zona;
+
+void inicializarDatos(const char *archivo) {
+    FILE *file = fopen(archivo, "wb");
+    if (!file) {
+        printf("Error al crear el archivo %s.\n", archivo);
+        return;
+    }
+
+    Zona zonas[5] = {
+        // Zonas con datos iniciales (como en ejemplos anteriores)
+        // Agrega aquí todas las zonas
     };
-    FILE *file = fopen("zonas.dat", "wb");
-    int numZonas = MAX_ZONAS;
-    fwrite(&numZonas, sizeof(int), 1, file);
-    fwrite(zonas, sizeof(Zona), numZonas, file);
+
+    for (int i = 0; i < 5; i++) {
+        fwrite(&zonas[i], sizeof(Zona), 1, file);
+        fflush(stdin); // Limpia el buffer después de escribir
+    }
+
     fclose(file);
-    printf("Archivo 'zonas.dat' creado con zonas pre-cargadas.\n");
+    printf("Archivo %s creado exitosamente con datos iniciales.\n", archivo);
+    fflush(stdin);
 }
 
 int main() {
-    inicializarZonas();
+    inicializarDatos("datos_historicos.dat");
+    fflush(stdin); // Limpia el buffer después de ejecutar la función principal
     return 0;
 }

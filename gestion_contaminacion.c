@@ -1,103 +1,106 @@
+#include <stdio.h>
+#include <string.h>
 #include "gestion_contaminacion.h"
 
-int cargarZonas(Zona zonas[]) {
-    FILE *file = fopen("zonas.dat", "rb");
+void cargarDatosHistoricos(const char *archivo, Zona zonas[], int numZonas) {
+    FILE *file = fopen(archivo, "rb");
     if (!file) {
-        return 0; // No se pudo abrir el archivo
+        printf("Error al abrir el archivo %s.\n", archivo);
+        return;
     }
-    int numZonas;
-    fread(&numZonas, sizeof(int), 1, file);
-    fread(zonas, sizeof(Zona), numZonas, file);
-    fclose(file);
-    return numZonas;
-}
 
-void guardarZonas(Zona zonas[], int numZonas) {
-    FILE *file = fopen("zonas.dat", "wb");
-    fwrite(&numZonas, sizeof(int), 1, file);
-    fwrite(zonas, sizeof(Zona), numZonas, file);
+    for (int i = 0; i < numZonas; i++) {
+        fread(&zonas[i], sizeof(Zona), 1, file);
+    }
+
     fclose(file);
 }
 
-void registrarMedicion(Zona zonas[], int numZonas) {
-    char nombreZona[50];
-    printf("Ingrese el nombre de la zona: ");
-    scanf("%s", nombreZona);
-
+void ingresarDatosContaminacion(Zona zonas[], int numZonas) {
     for (int i = 0; i < numZonas; i++) {
-        if (strcmp(zonas[i].nombre, nombreZona) == 0) {
-            if (zonas[i].numMediciones >= MAX_MEDICIONES) {
-                printf("No se pueden registrar más mediciones en esta zona.\n");
-                return;
-            }
-            Medicion nuevaMedicion;
-            printf("Ingrese los datos de la medición (PM2.5, NO2, SO2, CO, temperatura, velocidad del viento, humedad):\n");
-            scanf("%f %f %f %f %f %f %f", &nuevaMedicion.pm25, &nuevaMedicion.no2, &nuevaMedicion.so2, &nuevaMedicion.co, &nuevaMedicion.temperatura, &nuevaMedicion.velocidadViento, &nuevaMedicion.humedad);
-            printf("Ingrese la fecha y hora (YYYY-MM-DD HH:MM): ");
-            scanf("%s", nuevaMedicion.timestamp);
-            zonas[i].mediciones[zonas[i].numMediciones++] = nuevaMedicion;
-            printf("Medición registrada correctamente.\n");
-            return;
-        }
-    }
-
-    printf("Zona no encontrada. Por favor, intente nuevamente.\n");
-}
-
-void mostrarNivelesActuales(Zona zonas[], int numZonas) {
-    for (int i = 0; i < numZonas; i++) {
-        if (zonas[i].numMediciones > 0) {
-            Medicion actual = zonas[i].mediciones[zonas[i].numMediciones - 1];
-            printf("Zona: %s\n", zonas[i].nombre);
-            printf("PM2.5: %.2f, NO2: %.2f, SO2: %.2f, CO: %.2f\n", actual.pm25, actual.no2, actual.so2, actual.co);
-        }
+        printf("Ingrese datos de contaminación para la zona %s:\n", zonas[i].nombre);
+        fflush(stdin); // Limpia el buffer antes de leer datos
+        printf("CO2 (ppm): ");
+        scanf("%f", &zonas[i].actual[0]);
+        fflush(stdin);
+        printf("SO2 (ppm): ");
+        scanf("%f", &zonas[i].actual[1]);
+        fflush(stdin);
+        printf("NO2 (ppm): ");
+        scanf("%f", &zonas[i].actual[2]);
+        fflush(stdin);
+        printf("PM2.5 (µg/m³): ");
+        scanf("%f", &zonas[i].actual[3]);
+        fflush(stdin);
     }
 }
 
-void mostrarPrediccion(Zona zonas[], int numZonas) {
+void monitorearActual(Zona zonas[], int numZonas) {
+    const float umbrales[4] = {400.0, 0.075, 0.053, 35.0}; // Umbrales para CO2, SO2, NO2, PM2.5 (según OMS)
     for (int i = 0; i < numZonas; i++) {
-        if (zonas[i].numMediciones > 2) {
-            float promedioPM25 = 0;
-            for (int j = zonas[i].numMediciones - 3; j < zonas[i].numMediciones; j++) {
-                promedioPM25 += zonas[i].mediciones[j].pm25;
-            }
-            promedioPM25 /= 3;
-            printf("Predicción PM2.5 para zona %s: %.2f\n", zonas[i].nombre, promedioPM25);
-        }
-    }
-}
+        printf("Zona: %s\n", zonas[i].nombre);
+        fflush(stdin); // Limpia el buffer antes de imprimir datos
+        printf("Niveles actuales de contaminación:\n");
+        printf("CO2: %.2f ppm\n", zonas[i].actual[0]);
+        printf("SO2: %.2f ppm\n", zonas[i].actual[1]);
+        printf("NO2: %.2f ppm\n", zonas[i].actual[2]);
+        printf("PM2.5: %.2f µg/m³\n", zonas[i].actual[3]);
 
-void emitirAlertas(Zona zonas[], int numZonas) {
-    for (int i = 0; i < numZonas; i++) {
-        if (zonas[i].numMediciones > 0) {
-            Medicion actual = zonas[i].mediciones[zonas[i].numMediciones - 1];
-            if (actual.pm25 > 15.0) {
-                printf("ALERTA: Zona %s excede el límite de PM2.5\n", zonas[i].nombre);
+        // Mensajes de alerta
+        for (int j = 0; j < 4; j++) {
+            if (zonas[i].actual[j] > umbrales[j]) {
+                printf("¡ALERTA! El nivel de %s excede el límite aceptable.\n",
+                       (j == 0 ? "CO2" : j == 1 ? "SO2" : j == 2 ? "NO2" : "PM2.5"));
+                fflush(stdin);
             }
         }
     }
 }
 
-void mostrarRecomendaciones(Zona zonas[], int numZonas) {
+void predecirNiveles(Zona zonas[], int numZonas) {
     for (int i = 0; i < numZonas; i++) {
-        if (zonas[i].numMediciones > 0) {
-            Medicion actual = zonas[i].mediciones[zonas[i].numMediciones - 1];
-            if (actual.pm25 > 15.0) {
-                printf("Zona %s: Reduzca el tráfico vehicular y evite actividades al aire libre.\n", zonas[i].nombre);
-            }
-        }
+        zonas[i].prediccion = (zonas[i].contaminantes[29] * 0.4) +
+                              (zonas[i].contaminantes[28] * 0.3) +
+                              (zonas[i].contaminantes[27] * 0.2) +
+                              (zonas[i].contaminantes[26] * 0.1);
+        printf("Predicción para zona %s: %.2f\n", zonas[i].nombre, zonas[i].prediccion);
+        fflush(stdin);
     }
 }
 
-void exportarDatos(Zona zonas[], int numZonas) {
-    FILE *file = fopen("reporte.txt", "w");
+void calcularPromedios(Zona zonas[], int numZonas) {
+    for (int i = 0; i < numZonas; i++) {
+        float suma = 0;
+        for (int j = 0; j < 30; j++) {
+            suma += zonas[i].contaminantes[j];
+        }
+        zonas[i].promedioHistorico = suma / 30;
+        printf("Promedio histórico para zona %s: %.2f\n", zonas[i].nombre, zonas[i].promedioHistorico);
+        fflush(stdin);
+    }
+}
+
+void generarReporte(Zona zonas[], int numZonas, const char *archivo) {
+    FILE *file = fopen(archivo, "w");
+    if (!file) {
+        printf("Error al abrir el archivo %s.\n", archivo);
+        return;
+    }
+
+    fprintf(file, "Reporte de Contaminación:\n");
     for (int i = 0; i < numZonas; i++) {
         fprintf(file, "Zona: %s\n", zonas[i].nombre);
-        for (int j = 0; j < zonas[i].numMediciones; j++) {
-            Medicion m = zonas[i].mediciones[j];
-            fprintf(file, "Fecha: %s, PM2.5: %.2f, NO2: %.2f, SO2: %.2f, CO: %.2f\n", m.timestamp, m.pm25, m.no2, m.so2, m.co);
-        }
+        fprintf(file, "Niveles actuales:\n");
+        fprintf(file, "CO2: %.2f ppm\n", zonas[i].actual[0]);
+        fprintf(file, "SO2: %.2f ppm\n", zonas[i].actual[1]);
+        fprintf(file, "NO2: %.2f ppm\n", zonas[i].actual[2]);
+        fprintf(file, "PM2.5: %.2f µg/m³\n", zonas[i].actual[3]);
+        fprintf(file, "Promedio histórico: %.2f\n", zonas[i].promedioHistorico);
+        fprintf(file, "Predicción: %.2f\n\n", zonas[i].prediccion);
+        fflush(stdin);
     }
+
     fclose(file);
-    printf("Datos exportados correctamente a reporte.txt\n");
+    printf("Reporte generado en %s.\n", archivo);
+    fflush(stdin);
 }

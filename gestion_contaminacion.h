@@ -1,37 +1,19 @@
 #ifndef GESTION_CONTAMINACION_H
 #define GESTION_CONTAMINACION_H
 
-#include <stdio.h>
-#include <string.h>
-
-#define MAX_ZONAS 5
-#define MAX_MEDICIONES 30
-
-typedef struct {
-    float pm25;
-    float no2;
-    float so2;
-    float co;
-    float temperatura;
-    float velocidadViento;
-    float humedad;
-    char timestamp[20];
-} Medicion;
-
 typedef struct {
     char nombre[50];
-    Medicion mediciones[MAX_MEDICIONES];
-    int numMediciones;
+    float contaminantes[30]; // Últimos 30 días de contaminantes (promedio diario)
+    float actual[4]; // Niveles actuales de CO2, SO2, NO2, PM2.5
+    float promedioHistorico; // Promedio histórico general
+    float prediccion; // Predicción para las próximas 24 horas
 } Zona;
 
-// Funciones principales
-int cargarZonas(Zona zonas[]);
-void guardarZonas(Zona zonas[], int numZonas);
-void registrarMedicion(Zona zonas[], int numZonas);
-void mostrarNivelesActuales(Zona zonas[], int numZonas);
-void mostrarPrediccion(Zona zonas[], int numZonas);
-void emitirAlertas(Zona zonas[], int numZonas);
-void mostrarRecomendaciones(Zona zonas[], int numZonas);
-void exportarDatos(Zona zonas[], int numZonas);
+void cargarDatosHistoricos(const char *archivo, Zona zonas[], int numZonas);
+void ingresarDatosContaminacion(Zona zonas[], int numZonas);
+void monitorearActual(Zona zonas[], int numZonas);
+void predecirNiveles(Zona zonas[], int numZonas);
+void calcularPromedios(Zona zonas[], int numZonas);
+void generarReporte(Zona zonas[], int numZonas, const char *archivo);
 
 #endif

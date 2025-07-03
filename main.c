@@ -1,55 +1,47 @@
+#include <stdio.h>
+#include <string.h>
 #include "gestion_contaminacion.h"
 
 int main() {
-    Zona zonas[MAX_ZONAS];
-    int numZonas = cargarZonas(zonas);
+    Zona zonas[5];
+    cargarDatosHistoricos("datos_historicos.dat", zonas, 5);
 
-    if (numZonas == 0) {
-        printf("No se encontraron datos iniciales. Iniciando con datos vacíos.\n");
-    }
-
-    // Menú principal
     int opcion;
     do {
-        printf("\n--- Sistema Integral de Gestión y Predicción de Contaminación del Aire ---\n");
-        printf("1. Registrar nueva medición\n");
-        printf("2. Mostrar niveles actuales\n");
-        printf("3. Mostrar predicción de contaminación\n");
-        printf("4. Emitir alertas preventivas\n");
-        printf("5. Mostrar recomendaciones\n");
-        printf("6. Exportar datos a archivo\n");
-        printf("7. Salir\n");
+        printf("\nSistema Integral de Gestión y Predicción de Contaminación del Aire\n");
+        printf("1. Ingresar datos de contaminación actual\n");
+        printf("2. Monitorear contaminación actual\n");
+        printf("3. Predicción de niveles futuros\n");
+        printf("4. Calcular promedios históricos\n");
+        printf("5. Generar reporte\n");
+        printf("6. Salir\n");
         printf("Seleccione una opción: ");
+        fflush(stdin); // Limpia el buffer antes de leer la entrada
         scanf("%d", &opcion);
 
         switch (opcion) {
             case 1:
-                registrarMedicion(zonas, numZonas);
+                ingresarDatosContaminacion(zonas, 5);
                 break;
             case 2:
-                mostrarNivelesActuales(zonas, numZonas);
+                monitorearActual(zonas, 5);
                 break;
             case 3:
-                mostrarPrediccion(zonas, numZonas);
+                predecirNiveles(zonas, 5);
                 break;
             case 4:
-                emitirAlertas(zonas, numZonas);
+                calcularPromedios(zonas, 5);
                 break;
             case 5:
-                mostrarRecomendaciones(zonas, numZonas);
+                generarReporte(zonas, 5, "reportes.txt");
                 break;
             case 6:
-                exportarDatos(zonas, numZonas);
-                break;
-            case 7:
-                printf("Saliendo del programa...\n");
+                printf("Saliendo del sistema...\n");
                 break;
             default:
-                printf("Opción inválida. Por favor, intente nuevamente.\n");
-                break;
+                printf("Opción inválida. Intente nuevamente.\n");
         }
-    } while (opcion != 7);
+    } while (opcion != 6);
 
-    guardarZonas(zonas, numZonas);
     return 0;
 }
